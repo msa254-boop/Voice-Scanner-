@@ -1,6 +1,6 @@
 let mic, fft;
 let smoothing = 0.9;
-let waveSpeed = 0;
+let waveOffset = 0;
 
 function setup() {
   createCanvas(800, 400);
@@ -13,14 +13,14 @@ function initMic() {
   mic = new p5.AudioIn();
   mic.start();
 
-  fft = new p5.FFT(smoothing, 512);
+  fft = new p5.FFT(smoothing, 1024);
   fft.setInput(mic);
 
   document.getElementById("activateMic").disabled = true;
 }
 
 function draw() {
-  background(0, 20); // trailing effect
+  background(0, 20); // fading trail for motion
 
   if (!mic) {
     fill(255);
@@ -29,26 +29,25 @@ function draw() {
     return;
   }
 
-  waveSpeed += 2; // horizontal movement
+  waveOffset += 5; // horizontal wave movement
 
-  let spectrum = fft.analyze();
   let waveform = fft.waveform();
 
-  // Draw multiple layered waves
+  // Draw multiple wave layers
   for (let layer = 0; layer < 3; layer++) {
     beginShape();
     stroke(
       map(layer, 0, 2, 0, 255),
       map(layer, 0, 2, 255, 100),
       map(layer, 0, 2, 200, 255),
-      200
+      180
     );
     for (let i = 0; i < waveform.length; i++) {
       let x = map(i, 0, waveform.length, 0, width);
       let y =
-        height/2 +
-        waveform[i] * 200 * (layer + 1) +
-        sin((i + waveSpeed) * 0.05) * 30 * (layer + 1);
+        height/2 + 
+        waveform[i] * 300 * (layer + 1) +     // scale waveform amplitude
+        sin((i + waveOffset) * 0.05) * 40 * (layer + 1); // flowing sine offset
       vertex(x, y);
     }
     endShape();
