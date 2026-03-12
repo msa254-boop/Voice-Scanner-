@@ -1,10 +1,10 @@
 let mic, fft;
 let smoothing = 0.8;
-let waveformData = [];
 
 function setup() {
   createCanvas(800, 400);
   noFill();
+  strokeWeight(2);
 
   document.getElementById("activateMic").onclick = initMic;
 }
@@ -25,25 +25,24 @@ function draw() {
   if (!mic) {
     fill(255);
     textAlign(CENTER);
-    text("Click 'Activate Mic' to start", width/2, height/2);
+    text("Click 'Activate Mic' to start", width / 2, height / 2);
     return;
   }
 
-  // get waveform
-  waveformData = fft.waveform();
+  // GET WAVEFORM
+  let waveform = fft.waveform();
 
-  // draw waveform
+  // DRAW WAVEFORM LINE
   stroke(0, 255, 200);
-  strokeWeight(2);
   beginShape();
-  for (let i = 0; i < waveformData.length; i++) {
-    let x = map(i, 0, waveformData.length, 0, width);
-    let y = map(waveformData[i], -1, 1, 0, height);
+  for (let i = 0; i < waveform.length; i++) {
+    let x = map(i, 0, waveform.length, 0, width);
+    let y = map(waveform[i], -1, 1, 0, height);
     vertex(x, y);
   }
   endShape();
 
-  // optional: draw frequency spectrum overlay
+  // OPTIONAL: DRAW FREQUENCY SPECTRUM BARS
   let spectrum = fft.analyze();
   for (let i = 0; i < spectrum.length; i += 5) {
     let x = map(i, 0, spectrum.length, 0, width);
