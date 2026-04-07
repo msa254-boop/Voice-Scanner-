@@ -1,21 +1,18 @@
 let mic;
 let started = false;
+let smoothVol = 0;
 
 function setup() {
-  createCanvas(600, 300);
+  createCanvas(800, 400);
+  noFill();
+  strokeWeight(2);
 
   document.getElementById("activateMic").onclick = () => {
     userStartAudio().then(() => {
       mic = new p5.AudioIn();
-      mic.start(
-        () => {
-          console.log("Mic success");
-          started = true;
-        },
-        (err) => {
-          console.log("Mic error:", err);
-        }
-      );
+      mic.start(() => {
+        started = true;
+      });
     });
   };
 }
@@ -23,20 +20,42 @@ function setup() {
 function draw() {
   background(0);
 
-  fill(255);
-  textSize(16);
-
   if (!started) {
-    text("Click Activate Mic", 20, 50);
+    fill(255);
+    textAlign(CENTER);
+    text("Click Activate Mic", width / 2, height / 2);
     return;
   }
 
-  let level = mic.getLevel();
-  let scaled = level * 1000;
+  // GET MIC VOLUME
+  let vol = mic.getLevel();
 
-  text("Mic Level: " + scaled.toFixed(2), 20, 50);
+  // SMOOTHING (important so it doesn’t jitter)
+  smoothVol = smoothVol * 0.9 + vol * 0.1;
 
-  // VISUAL BAR (this MUST move)
-  fill(0, 255, 200);
-  rect(20, 100, scaled * 5, 30);
+  // SCALE IT UP (so it’s visible)
+  let amp = smoothVol * 1000;
+
+  // DEBUG TEXT
+  fill(255);
+  text("Volume: " + amp.toFixed(2), 10, 20);
+
+  stroke(0, 255, 200);
+
+  beginShape();
+
+  for (let x = 0; x < width; x++) {
+
+    // BASELINE (flat when no sound)
+    let y = height / 2;
+
+    // ONLY deform when there is sound
+    if (amp > 1) {
+      y += sin(x * 0.02) * amp;
+    }
+
+    vertex(x, y);
+  }
+
+  endShape();
 }
