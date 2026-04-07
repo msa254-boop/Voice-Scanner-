@@ -1,55 +1,60 @@
-let mic, fft;
-let smoothing = 0.9;
+let mic;
 let waveOffset = 0;
+let volume = 0;
 
 function setup() {
   createCanvas(800, 400);
   noFill();
   strokeWeight(2);
-  document.getElementById("activateMic").onclick = initMic;
+
+  document.getElementById("activateMic").onclick = startMic;
 }
 
-function initMic() {
-  mic = new p5.AudioIn();
-  mic.start();
+function startMic() {
+  userStartAudio().then(() => {
+    mic = new p5.AudioIn();
+    mic.start();
 
-  fft = new p5.FFT(smoothing, 1024);
-  fft.setInput(mic);
+    console.log("Mic started");
+  });
 
   document.getElementById("activateMic").disabled = true;
 }
 
 function draw() {
-  background(0, 20); // fading trail for motion
+  background(0, 30);
 
   if (!mic) {
     fill(255);
     textAlign(CENTER);
-    text("Click 'Activate Mic' to start", width/2, height/2);
+    text("Click Activate Mic", width / 2, height / 2);
     return;
   }
 
-  waveOffset += 5; // horizontal wave movement
+  // GET VOLUME (THIS IS THE KEY FIX)
+  volume = mic.getLevel();
 
-  let waveform = fft.waveform();
+  // amplify it so it's visible
+  let scaledVol = volume * 1000;
 
-  // Draw multiple wave layers
-  for (let layer = 0; layer < 3; layer++) {
-    beginShape();
-    stroke(
-      map(layer, 0, 2, 0, 255),
-      map(layer, 0, 2, 255, 100),
-      map(layer, 0, 2, 200, 255),
-      180
-    );
-    for (let i = 0; i < waveform.length; i++) {
-      let x = map(i, 0, waveform.length, 0, width);
-      let y =
-        height/2 + 
-        waveform[i] * 300 * (layer + 1) +     // scale waveform amplitude
-        sin((i + waveOffset) * 0.05) * 40 * (layer + 1); // flowing sine offset
-      vertex(x, y);
-    }
-    endShape();
+  // DEBUG TEXT (VERY IMPORTANT)
+  fill(255);
+  text("Volume: " + scaledVol.toFixed(2), 10, 20);
+
+  waveOffset += 3;
+
+  // DRAW WAVE
+  stroke(0, 255, 200);
+  beginShape();
+
+  for (let x = 0; x < width; x++) {
+    let y =
+      height / 2 +
+      sin((x + waveOffset) * 0.05) * 50 + // base wave
+      scaledVol * sin(x * 0.02); // voice influence
+
+    vertex(x, y);
   }
+
+  endShape();
 }
