@@ -1,60 +1,42 @@
 let mic;
-let waveOffset = 0;
-let volume = 0;
+let started = false;
 
 function setup() {
-  createCanvas(800, 400);
-  noFill();
-  strokeWeight(2);
+  createCanvas(600, 300);
 
-  document.getElementById("activateMic").onclick = startMic;
-}
-
-function startMic() {
-  userStartAudio().then(() => {
-    mic = new p5.AudioIn();
-    mic.start();
-
-    console.log("Mic started");
-  });
-
-  document.getElementById("activateMic").disabled = true;
+  document.getElementById("activateMic").onclick = () => {
+    userStartAudio().then(() => {
+      mic = new p5.AudioIn();
+      mic.start(
+        () => {
+          console.log("Mic success");
+          started = true;
+        },
+        (err) => {
+          console.log("Mic error:", err);
+        }
+      );
+    });
+  };
 }
 
 function draw() {
-  background(0, 30);
+  background(0);
 
-  if (!mic) {
-    fill(255);
-    textAlign(CENTER);
-    text("Click Activate Mic", width / 2, height / 2);
+  fill(255);
+  textSize(16);
+
+  if (!started) {
+    text("Click Activate Mic", 20, 50);
     return;
   }
 
-  // GET VOLUME (THIS IS THE KEY FIX)
-  volume = mic.getLevel();
+  let level = mic.getLevel();
+  let scaled = level * 1000;
 
-  // amplify it so it's visible
-  let scaledVol = volume * 1000;
+  text("Mic Level: " + scaled.toFixed(2), 20, 50);
 
-  // DEBUG TEXT (VERY IMPORTANT)
-  fill(255);
-  text("Volume: " + scaledVol.toFixed(2), 10, 20);
-
-  waveOffset += 3;
-
-  // DRAW WAVE
-  stroke(0, 255, 200);
-  beginShape();
-
-  for (let x = 0; x < width; x++) {
-    let y =
-      height / 2 +
-      sin((x + waveOffset) * 0.05) * 50 + // base wave
-      scaledVol * sin(x * 0.02); // voice influence
-
-    vertex(x, y);
-  }
-
-  endShape();
+  // VISUAL BAR (this MUST move)
+  fill(0, 255, 200);
+  rect(20, 100, scaled * 5, 30);
 }
